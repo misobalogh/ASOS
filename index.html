@@ -79,6 +79,8 @@ svg.edges{position:absolute;inset:0;width:2280px;height:1100px;overflow:visible;
 .chapters{left:clamp(16px,2.6vw,48px);bottom:calc(clamp(14px,3vh,40px) + env(safe-area-inset-bottom,0px));display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;max-width:calc(100% - var(--panel-w) - 120px)}
 .zoombtns{left:clamp(16px,2.6vw,48px);top:calc(clamp(70px,10vh,110px) + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:8px}
 .zoombtns button{width:44px;height:44px;border-radius:50%;border:0;background:var(--paper);color:var(--ink);font-weight:900;font-size:20px}
+.zoombtns button svg{display:block;margin:auto}
+.zoombtns button svg[hidden]{display:none}
 .title-ghost{left:clamp(16px,2.6vw,48px);top:calc(clamp(70px,10vh,110px) + env(safe-area-inset-top,0px));font-family:var(--mono);font-size:13px;opacity:.7;display:none}
 
 /* panel */
@@ -217,7 +219,7 @@ table.cmp .hl{background:var(--amber)}
   <button class="chip paper" id="overview">Mapa</button><span class="slash">/</span><span class="chip on" id="crumbCh">Úvod</span>
   <div class="modeSeg" role="group" aria-label="Počet agentov"><button data-m="single" aria-pressed="false">1 agent</button><button data-m="multi" aria-pressed="true">Tím (5)</button></div>
 </div>
-<div class="ui zoombtns"><button id="zin" aria-label="Priblížiť">+</button><button id="zout" aria-label="Oddialiť">&minus;</button></div>
+<div class="ui zoombtns"><button id="zin" aria-label="Priblížiť">+</button><button id="zout" aria-label="Oddialiť">&minus;</button><button id="fs" aria-label="Celá obrazovka (F)" title="Celá obrazovka (F)"><svg id="fsIn" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><svg id="fsOut" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button></div>
 <nav class="ui chapters" id="chapters" aria-label="Kapitoly"></nav>
 
 <section class="ui panel" id="panel" aria-live="polite">
@@ -2915,6 +2917,18 @@ world.addEventListener('click',e=>{
   if(i>=0) go(i);
 });
 $('zin').onclick=()=>zoomAt(1.25); $('zout').onclick=()=>zoomAt(0.8);
+function toggleFullscreen(){
+  try{ document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(()=>{}); }catch(err){}
+}
+if(document.fullscreenEnabled){
+  $('fs').onclick=toggleFullscreen;
+  document.addEventListener('fullscreenchange',()=>{
+    const on=!!document.fullscreenElement;
+    $('fsIn').hidden=on; $('fsOut').hidden=!on;
+    $('fs').setAttribute('aria-label', on?'Ukončiť celú obrazovku (F)':'Celá obrazovka (F)');
+    $('fs').title=$('fs').getAttribute('aria-label');
+  });
+}else{ $('fs').hidden=true; }
 function zoomAt(f,cx,cy){ const v=visibleRect(); cx=cx??v.w/2; cy=cy??(v.y+v.h/2); const ns=Math.max(.2,Math.min(2.2,cam.s*f)); cam.x=cx-(cx-cam.x)*(ns/cam.s); cam.y=cy-(cy-cam.y)*(ns/cam.s); cam.s=ns; applyCam(); }
 stage.addEventListener('wheel',e=>{ e.preventDefault(); world.classList.add('dragging'); zoomAt(e.deltaY<0?1.1:0.9,e.clientX,e.clientY - stage.getBoundingClientRect().top); clearTimeout(wt); wt=setTimeout(()=>world.classList.remove('dragging'),120); },{passive:false});
 let wt, drag=null, moved=false;
@@ -2925,7 +2939,7 @@ document.addEventListener('keydown',e=>{
   if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){ if(e.target.closest('button')&&e.key===' ') return; e.preventDefault(); go(cur+1); }
   else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){ e.preventDefault(); go(cur-1); }
   else if(e.key==='m'||e.key==='M'||e.key==='Escape'){ $('overview').click(); }
-  else if(e.key==='f'||e.key==='F'){ try{ document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{}); }catch(err){} }
+  else if(e.key==='f'||e.key==='F'){ toggleFullscreen(); }
   else if(e.key==='Home'){ go(0); } else if(e.key==='End'){ go(S.length-1); }
 });
 let rt; addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(()=>{ const s=S[cur]; fitBox(boxOf(s.focus,s.frame)); },150); });
