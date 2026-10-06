@@ -2668,32 +2668,19 @@ const S = [
     <span class="k">"query"</span>: <span class="s">"string"</span>,
     <span class="k">"max_price"</span>: <span class="s">"number"</span>
   }
-}</pre><p class="note">Sampling, Roots a Logging sú v špecifikácii 2026-07-28 označené ako zastarané.</p>`},
-{ch:'03', focus:['mcpB','mcpA'], mode:'multi', html:()=>`<div class="eyebrow">03 MCP</div><h2>Objavovanie schopností a autorizácia</h2>
-  <div class="mini m-sand"><span class="eyebrow">Discovery a negotiation</span><ul class="ul"><li><b>server/discover</b>: verzie protokolu, schopnosti a identita servera</li><li><b>tools/list, resources/list, prompts/list</b>: katalóg s JSON schémami</li><li><b>list_changed</b> notifikácie: katalóg sa môže meniť za behu</li><li>Capabilities deklarujú obe strany, neznáme rozšírenie sa ignoruje</li></ul></div>
-  <div class="mini m-sand"><span class="eyebrow">Autorizácia a hranice</span><ul class="ul"><li><b>OAuth 2.1</b>: MCP server je resource server, tokeny vydáva autorizačný server</li><li><b>Protected Resource Metadata</b> (RFC 9728): klient zistí, kde sa prihlásiť</li><li>Token viazaný na konkrétny server (RFC 8707), žiadne preposielanie tokenov</li><li>Klient sa identifikuje cez <b>CIMD</b>, dynamická registrácia je zastaraná</li></ul></div>
-  <div class="mini m-amber"><h3>Každý server je samostatná hranica dôvery.</h3></div>`},
-{ch:'03', focus:['mcpB','mcpA'], mode:'multi', html:()=>`<div class="eyebrow">03 MCP, novinky 2026</div><h2>Stateless MCP: špecifikácia 2026-07-28</h2>
-  ${table('',['Oblasť','Do 2025-11-25','Od 2026-07-28'],[['Spojenie a relácia','Handshake initialize a hlavička Mcp-Session-Id','Bez handshaku a relácie, verzia a capabilities v každej požiadavke'],['Škálovanie','Sticky sessions, zdieľané úložisko relácií','Ľubovoľná inštancia za load balancerom, aj serverless'],['Schopnosti servera','Raz, v odpovedi na initialize','server/discover kedykoľvek na požiadanie'],['Spätné požiadavky','Server posiela požiadavky cez otvorený stream','Multi round-trip requests (MRTR)']])}
-  <div class="mini m-blue"><p><b style="color:var(--amber)">Protokol je bezstavový, aplikácia stavová byť môže.</b> Stav sa nesie explicitne, napríklad ako task ID alebo vlastný identifikátor.</p></div>`},
-{ch:'03', focus:['mcpB','mcpA'], mode:'multi', html:()=>`<div class="eyebrow">03 MCP, novinky 2026</div><h2>Rozšírenia MCP: Apps a Tasks</h2>
-  <div class="grid2"><div class="mini m-sand"><span class="eyebrow">MCP extensions</span><h3>Voliteľné vrstvy nad jadrom</h3><p>Aditívne rozšírenia dohodnuté cez capabilities. Ak ich jedna strana nepozná, ignoruje ich a jadro funguje ďalej.</p></div><div class="mini m-sand"><span class="eyebrow">MCP Apps</span><h3>Interaktívne UI zo servera</h3><p>Prvé oficiálne rozšírenie (GA jan. 2026). Server dodá graf, formulár či dashboard, host ho vykreslí v sandboxe.</p></div></div>
-  <div class="mini m-blue"><span class="eyebrow" style="color:var(--amber)">MCP Tasks</span><p>Pri dlhej operácii server vráti task ID namiesto blokovania. Klient sa pýta cez <b>tasks/get</b>, vstup dodá cez <b>tasks/update</b>, zruší cez <b>tasks/cancel</b>. Úloha prežije výpadok spojenia.</p>
-   <div class="flow mono"><span class="fp amber">working</span>${arrow}<span class="fp amber">input_required</span>${arrow}<span class="fp line">completed</span><span class="fp line">failed</span><span class="fp line">cancelled</span></div></div>`},
+}</pre>`},
 
 /* 04 */
-{ch:'04', focus:['analytik','ext'], mode:'multi', html:()=>`<div class="eyebrow">04 Agent a agent</div><h2>MCP a A2A</h2>
-  ${table('',['','MCP','A2A'],[['Vzťah','agent a nástroje, dáta','agent a agent, nezávislí a nepriehľadní'],['Jednotka práce','volanie nástroja, resource, prompt','úloha (task) so stavom, správy, artefakty'],['Objavovanie','server/discover, tools/list','Agent Card'],['Druhá strana','presne popísaná JSON schémou','čierna skrinka s vlastným modelom a frameworkom']])}
-  <div class="mini m-blue"><p><b style="color:var(--amber)">Agent Card</b> = vizitka agenta: názov, schopnosti (skills), endpoint a autentifikácia. Zverejnená na <span class="mono">/.well-known/agent-card.json</span></p></div>
-  <p class="note">Agenti sa koordinujú cez A2A, každý z nich používa svoje nástroje cez MCP.</p>`},
 {ch:'04', focus:[], mode:'multi', html:()=>`<div class="eyebrow">04 Agent a agent, trendy</div><h2>Nové pojmy v ekosystéme agentov</h2>
   <div class="grid2">
+   <div class="mini m-sand"><h3>A2A</h3><p>Otvorený protokol pre komunikáciu agent s agentom: Agent Card, úlohy (tasks) so stavom, správy a artefakty.</p></div>
    <div class="mini m-sand"><h3>Interoperabilita</h3><p>Agenti z rôznych frameworkov (LangGraph, CrewAI, ADK) spolupracujú cez spoločné protokoly A2A a MCP.</p></div>
    <div class="mini m-sand"><h3>Agent mesh</h3><p>Sieť agentov s registrom, smerovaním, politikami a monitoringom, podobne ako service mesh.</p></div>
    <div class="mini m-sand"><h3>A2UI</h3><p>Agent pošle deklaratívny popis UI v JSON, klient ho vykreslí vlastnými komponentmi bez cudzieho kódu.</p></div>
    <div class="mini m-sand"><h3>Computer-use a browser agenti</h3><p>Ovládajú GUI cez snímky obrazovky, klikanie a písanie, alebo priamo webový prehliadač.</p></div>
    <div class="mini m-sand"><h3>Sandboxované vykonávanie</h3><p>Kód a nástroje bežia v izolovanom kontajneri alebo VM s obmedzenou sieťou a súbormi.</p></div>
-   <div class="mini m-sand"><h3>Agentic Software Factory</h3><p>Agenti plánujú, generujú, testujú a nasadzujú softvérové komponenty v riadenej pipeline.</p></div></div>`},
+   <div class="mini m-sand"><h3>Agentic Software Factory</h3><p>Agenti plánujú, generujú, testujú a nasadzujú softvérové komponenty v riadenej pipeline.</p></div>
+   <div class="mini m-sand"><h3>Context engineering</h3><p>Správne informácie v správnom čase: výber nástrojov, sumarizácia histórie, izolácia kontextu v sub-agentoch.</p></div></div>`},
 
 /* 05 */
 {ch:'05', focus:TEAM, frame:true, mode:'multi', html:()=>`<div class="eyebrow">05 Frameworky a návrhové prístupy</div><h2>Deterministický workflow vs. autonómia</h2>
@@ -2738,8 +2725,7 @@ crew.kickoff(inputs={<span class="k">"query"</span>: <span class="s">"RTX 4070 d
   ${table('fwT',['','LangGraph','CrewAI'],[['Abstrakcia','Graf: uzly, hrany, stav','Tím: agenti, úlohy, proces'],['Riadenie toku','Explicitné, aj cykly a podmienky','Sekvenčný alebo hierarchický proces, Flows'],['Stav a obnova','Typovaný stav, checkpointy','Hlavne vo Flows'],['Človek v slučke','interrupt() kdekoľvek v grafe','Vstup človeka pri úlohe'],['Začiatok','Strmšia krivka učenia','Rýchly štart, intuitívne roly']])}
   <div class="grid2"><div class="mini m-blue"><p><b>LangGraph</b>, keď je potrebná presná kontrola nad tokom a stavom.</p></div><div class="mini m-amber"><p><b>CrewAI</b>, keď je cieľom rýchlo poskladať tím s rolami.</p></div></div>`},
 {ch:'05', focus:TEAM, frame:true, mode:'multi', html:()=>`<div class="eyebrow">05 Frameworky</div><h2>Porovnanie frameworkov</h2>
-  ${table('',['Framework','Model orchestrácie','Silné stránky'],[['LangGraph','Graf so stavom: uzly, hrany, cykly','Maximálna kontrola, checkpointing, HITL, durable execution'],['CrewAI','Crews (roly) + Flows (udalosti)','Rýchly štart, intuitívny model tímu agentov'],['OpenAI Agents SDK','Agenti, handoffs, agenti ako nástroje','Minimalistické, guardrails, sessions a tracing v základe'],['Google ADK','LLM agenti + Sequential, Parallel a Loop agenti','Podpora A2A, nasadenie na Vertex AI Agent Engine'],['Semantic Kernel','Pluginy + Agent Framework (.NET, Python, Java)','Enterprise a Azure, nástupca: Microsoft Agent Framework']])}
-  <p class="note">Stav k októbru 2026.</p>`},
+  ${table('',['Framework','Model orchestrácie','Silné stránky'],[['LangGraph','Graf so stavom: uzly, hrany, cykly','Maximálna kontrola, checkpointing, HITL, durable execution'],['CrewAI','Crews (roly) + Flows (udalosti)','Rýchly štart, intuitívny model tímu agentov'],['OpenAI Agents SDK','Agenti, handoffs, agenti ako nástroje','Minimalistické, guardrails, sessions a tracing v základe'],['Google ADK','LLM agenti + Sequential, Parallel a Loop agenti','Podpora A2A, nasadenie na Vertex AI Agent Engine'],['Semantic Kernel','Pluginy + Agent Framework (.NET, Python, Java)','Enterprise a Azure, nástupca: Microsoft Agent Framework']])}`},
 
 /* 06 */
 {ch:'06', focus:['bazos','alza','mcpB','mcpA'], mode:'multi', html:()=>`<div class="eyebrow">06 Spoľahlivosť a bezpečnosť</div><h2>Bezpečnosť agentov a nástrojov</h2>
@@ -2754,7 +2740,7 @@ crew.kickoff(inputs={<span class="k">"query"</span>: <span class="s">"RTX 4070 d
 
 /* zaver */
 {ch:'zaver', focus:['output'], mode:'multi', html:()=>`<div class="eyebrow">Zhrnutie</div><h2>Čo si odniesť</h2>
-  <div class="grid2" style="grid-template-columns:1fr"><div class="mini m-sand"><span class="num">1</span><p>Začnite jedným agentom. Multiagentový systém až vtedy, keď ho úloha naozaj potrebuje.</p></div><div class="mini m-sand"><span class="num">2</span><p>MCP spája agenta s nástrojmi, A2A agentov medzi sebou. Od 2026-07-28 je MCP bezstavové.</p></div><div class="mini m-sand"><span class="num">3</span><p>Deterministická kostra (LangGraph, CrewAI Flows) a autonómia len tam, kde prináša hodnotu.</p></div><div class="mini m-sand"><span class="num">4</span><p>Bezpečnosť, tracing a evaluácia patria do návrhu od prvého dňa.</p></div></div>
+  <div class="grid2" style="grid-template-columns:1fr"><div class="mini m-sand"><span class="num">1</span><p>Začnite jedným agentom. Multiagentový systém až vtedy, keď ho úloha naozaj potrebuje.</p></div><div class="mini m-sand"><span class="num">2</span><p>Deterministická kostra (LangGraph, CrewAI Flows) a autonómia len tam, kde prináša hodnotu.</p></div><div class="mini m-sand"><span class="num">3</span><p>Dôležité kroky (platba, odoslanie) nech schvaľuje človek, stav behu nech je explicitný.</p></div><div class="mini m-sand"><span class="num">4</span><p>MCP spája agenta s nástrojmi, A2A agentov medzi sebou.</p></div><div class="mini m-sand"><span class="num">5</span><p>Nezabudnite si svoje veci, hlavne peňaženku a mobil.</p></div><div class="mini m-sand"><span class="num">6</span><p>A hlavne dobrú náladu.</p></div></div>
   <div class="mini m-amber" style="flex-direction:row;align-items:baseline;gap:16px;flex-wrap:wrap"><h1 style="font-size:clamp(30px,3vw,56px)">Ďakujeme.</h1><h3>Otázky?</h3></div>`},
 {ch:'zaver', focus:[], mode:'multi', html:()=>`<div class="eyebrow">Literatúra</div><h2>Zdroje</h2><ol class="refs">
   <li>Yao, S. a kol.: ReAct: Synergizing Reasoning and Acting in Language Models. ICLR 2023. arXiv:2210.03629</li>
