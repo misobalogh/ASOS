@@ -2584,8 +2584,8 @@ const cycleHTML = on => `<div class="cycle" id="cycle">
 const REACT = {
   1:`<pre class="code"><span class="c">Cieľ:</span> RTX 4070 do 450 €
 <span class="k">Thought:</span> pozriem najprv bazár</pre>`,
-  2:`<pre class="code"><span class="s">Action:</span> bazos_search(
-  query=<span class="s">"RTX 4070"</span>, max_price=<span class="s">450</span>)</pre>`,
+  2:`<pre class="code"><span class="s">Action:</span> search_listings(
+  query=<span class="s">"RTX 4070"</span>, section=<span class="s">"PC"</span>, price_max=<span class="s">450</span>)</pre>`,
   3:`<pre class="code"><span class="c">Observation:</span> [inzeráty s cenou a lokalitou]
 <span class="k">Thought:</span> porovnám s novými kusmi v akcii
 <span class="s">Action:</span> alza_search(query=<span class="s">"RTX 4070"</span>)
@@ -2662,11 +2662,12 @@ const S = [
 {ch:'03', focus:['mcpB'], mode:'multi', html:()=>`<div class="eyebrow">03 MCP</div><h2>Primitíva MCP</h2>
   ${table('',['Primitívum','Kto riadi','Na čo slúži'],[['Tools','model','Akcie a výpočty, môžu mať vedľajšie účinky'],['Resources','aplikácia','Dáta na čítanie, identifikované cez URI'],['Prompts','používateľ','Pripravené šablóny, napr. slash príkazy'],['Elicitation','server k človeku','Server si počas behu vypýta doplňujúci vstup']])}
   <pre class="code">{
-  <span class="k">"name"</span>: <span class="s">"bazos_search"</span>,
+  <span class="k">"name"</span>: <span class="s">"search_listings"</span>,
   <span class="k">"description"</span>: <span class="s">"Vyhľadá inzeráty na Bazoš.sk"</span>,
   <span class="k">"inputSchema"</span>: {
     <span class="k">"query"</span>: <span class="s">"string"</span>,
-    <span class="k">"max_price"</span>: <span class="s">"number"</span>
+    <span class="k">"section"</span>: <span class="s">"string"</span>,
+    <span class="k">"price_max"</span>: <span class="s">"integer"</span>
   }
 }</pre>`},
 
