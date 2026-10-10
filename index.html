@@ -2582,13 +2582,14 @@ const cycleHTML = on => `<div class="cycle" id="cycle">
   <button class="stagebox" data-k="2" aria-pressed="${on===2}"><b>2 Act</b><span>Zavolaj nástroj.</span></button>
   <button class="stagebox" data-k="3" aria-pressed="${on===3}"><b>3 Observe</b><span>Prečítaj výsledok.</span></button></div>`;
 const REACT = {
-  1:`<pre class="code"><span class="c">Cieľ:</span> RTX 4070 do 450 €
+  1:`<pre class="code"><span class="c">Cieľ:</span> RTX 4070 alebo podobný výkon do 600 €
 <span class="k">Thought:</span> pozriem najprv bazár</pre>`,
   2:`<pre class="code"><span class="s">Action:</span> search_listings(
-  query=<span class="s">"RTX 4070"</span>, section=<span class="s">"PC"</span>, price_max=<span class="s">450</span>)</pre>`,
+  query=<span class="s">"RTX 4070"</span>, section=<span class="s">"PC"</span>, price_max=<span class="s">600</span>)</pre>`,
   3:`<pre class="code"><span class="c">Observation:</span> [inzeráty s cenou a lokalitou]
 <span class="k">Thought:</span> porovnám s novými kusmi v akcii
-<span class="s">Action:</span> alza_search(query=<span class="s">"RTX 4070"</span>)
+<span class="s">Action:</span> search_products(
+  query=<span class="s">"RTX 4070"</span>, max_price=<span class="s">600</span>, discount=<span class="s">"sale"</span>)
 <span class="c">Observation:</span> [produkty s cenou a zľavou]
 <b>Answer:</b> najlepšia ponuka, cena, odkaz</pre>`
 };
@@ -2608,7 +2609,7 @@ const S = [
   <p style="font-weight:700">Hušek J., Osadský J., Balogh M., Strečko S.</p>
   <div class="qrbox" id="qrbox" hidden><div id="qr"></div><div><h3>Naskenujte QR kód alebo otvorte odkaz a preklikajte si mapu sami</h3><a class="qrlink mono" id="qrurl" target="_blank" rel="noopener"></a></div></div>`},
 {ch:'uvod', focus:['user','output'], mode:'multi', html:()=>`<div class="eyebrow">Príklad</div><h1>Cenový sniper</h1>
-  <div class="mini m-sand"><span class="eyebrow">Dotaz používateľa</span><h3 style="font-size:clamp(19px,1.6vw,28px)">Chcem RTX 4070 do 450 €, novú alebo z bazáru.</h3></div>${A.gpu}
+  <div class="mini m-sand"><span class="eyebrow">Dotaz používateľa</span><h3 style="font-size:clamp(19px,1.6vw,28px)">Chcem RTX 4070 alebo podobný výkon do 600 €, novú alebo z bazáru.</h3></div>${A.gpu}
   <div class="grid2"><div class="mini m-blue"><h3>Zdroje</h3><p>Bazoš pre inzeráty z druhej ruky, Alza pre nový tovar a zľavy.</p></div><div class="mini m-amber"><h3>Výstup</h3><p>Odporúčanie s cenou, stavom, zárukou a odkazom.</p></div></div>`},
 
 /* 01 */
@@ -2713,7 +2714,7 @@ app = g.compile(checkpointer=saver)</pre>
   agents=[bazos_scout, alza_scout, analyst],
   tasks=[search_bazos, search_alza, compare],
   process=Process.sequential)
-crew.kickoff(inputs={<span class="k">"query"</span>: <span class="s">"RTX 4070 do 450 €"</span>})</pre>
+crew.kickoff(inputs={<span class="k">"query"</span>: <span class="s">"RTX 4070 alebo podobný výkon do 600 €"</span>})</pre>
   <div class="mini m-sand"><span class="eyebrow">Deterministická kostra</span><h3>Flows</h3><p>Workflow riadený udalosťami so štruktúrovaným stavom. Kroky spájajú @start, @listen a @router, krok môže spustiť celú Crew.</p></div>
   <pre class="code"><span class="k">class</span> SniperFlow(Flow[DealState]):
   <span class="s">@start()</span>
@@ -2732,11 +2733,11 @@ crew.kickoff(inputs={<span class="k">"query"</span>: <span class="s">"RTX 4070 d
 {ch:'06', focus:['bazos','alza','mcpB','mcpA'], mode:'multi', html:()=>`<div class="eyebrow">06 Spoľahlivosť a bezpečnosť</div><h2>Bezpečnosť agentov a nástrojov</h2>
   <div class="mini m-ink"><span class="eyebrow" style="color:var(--amber)">Hlavná hrozba</span><h3>Prompt injection</h3><p>Inštrukcie ukryté v dátach (web, e-mail, PDF, text inzerátu, výstup nástroja) model môže vykonať ako príkaz. Všetko zvonku je nedôveryhodné.</p>
    <p class="eyebrow" style="color:var(--amber);margin-top:6px">Nebezpečná trojica</p><div class="trio"><span>1 Prístup k súkromným dátam</span><span>2 Nedôveryhodný obsah v kontexte</span><span>3 Možnosť komunikovať von</span></div></div>
-  <div class="grid2"><div class="mini m-sand"><h3>Guardrails a validácia</h3><p>Kontrola vstupov a výstupov: schémy, filtre, klasifikátory, ochrana osobných údajov.</p></div><div class="mini m-sand"><h3>Least privilege</h3><p>Každý agent a nástroj len s minimálnymi oprávneniami a úzkym scope tokenu.</p></div><div class="mini m-sand"><h3>Schvaľovanie a audit</h3><p>Citlivé akcie (platba, mazanie, odoslanie) schvaľuje človek, každé volanie nástroja sa loguje.</p></div><div class="mini m-sand"><h3>Sandbox</h3><p>Kód a nástroje v izolovanom prostredí s obmedzenou sieťou a súbormi.</p></div></div>`},
+  <div class="grid2"><div class="mini m-sand"><h3>Guardrails a validácia</h3><p>Kontrola vstupov a výstupov: schémy, filtre, klasifikátory, ochrana osobných údajov.</p></div><div class="mini m-sand"><h3>Least privilege</h3><p>Každý agent a nástroj len s minimálnymi oprávneniami a úzkym scope tokenu. Naše MCP servery (Bazoš, Alza) sú len na čítanie: bez košíka, účtu a objednávok.</p></div><div class="mini m-sand"><h3>Schvaľovanie a audit</h3><p>Citlivé akcie (platba, mazanie, odoslanie) schvaľuje človek, každé volanie nástroja sa loguje.</p></div><div class="mini m-sand"><h3>Sandbox</h3><p>Kód a nástroje v izolovanom prostredí s obmedzenou sieťou a súbormi.</p></div></div>`},
 
 /* demo */
 {ch:'demo', focus:[], mode:'multi', ink:true, after:bindDemo, html:()=>`<div class="eyebrow">Demo</div><div class="row" style="align-items:center;justify-content:space-between"><h1>Demo</h1><button class="big-play" id="play" aria-label="Spustiť tok na mape"><svg viewBox="0 0 40 46"><path d="M0 0 L40 23 L0 46Z" fill="#16171c"/></svg></button></div>
-  <div class="mini m-sand"><span class="eyebrow">Dotaz</span><h3>Chcem RTX 4070 do 450 €, novú alebo z bazáru.</h3></div>
+  <div class="mini m-sand"><span class="eyebrow">Dotaz</span><h3>Chcem RTX 4070 alebo podobný výkon do 600 €, novú alebo z bazáru.</h3></div>
   <div class="log" id="demoLog"></div>`},
 
 /* zaver */
@@ -2867,7 +2868,7 @@ function bindDemo(){
     const log=$('demoLog'), say=t=>{ if(document.body.contains(log)) log.innerHTML+=esc(t)+'<br>'; };
     log.innerHTML=''; setMode('multi'); setFocus([],false); fitBox(boxOf([],false));
     const lit=ids=>setFocus(ids,false);
-    lit(['user','router']); say('user: "RTX 4070 do 450 €, nová alebo bazár"'); await packet('user','router',900);
+    lit(['user','router']); say('user: "RTX 4070 alebo podobný výkon do 600 €, nová alebo bazár"'); await packet('user','router',900);
     say('router: zdroje -> [bazos, alza]'); lit(['router','bazos','alza']);
     await Promise.all([packet('router','bazos',900),packet('router','alza',900)]);
     say('bazos_scout || alza_scout: mcp.call ...'); lit(['bazos','alza','mcpB','mcpA']);
