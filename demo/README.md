@@ -43,6 +43,9 @@ uv run python crewai_demo.py        # same, built as CrewAI Flow
 uv run python langgraph_demo.py "iPhone 13 do 300 EUR"   # one question without the prompt
 ```
 
+- Komunikacia s MCP je vidiet v terminali (`agents/mcp_trace.py`): na starte adresa:port a nastroje oboch serverov (`[mcp]`),
+  potom pri kazdom volani `-->` (server, nastroj, argumenty) a `<--` (cas a suhrn odpovede). IP adresa je v
+  vypise maskovana (`x.x.x.x:8000`), port ostava; `MCP_SHOW_HOST=1` ukaze skutocnu. `MCP_RAW=1` vypise celu odpoved.
 - Kazdy beh trva okolo minuty. Free tier Gemini ma limit 15 poziadaviek za minutu, takze dva behy hned po sebe mozu
   skoncit chybou 429: po jednom behu pockaj minutu, alebo pouzi plateny kluc.
 - Scout dostane len nastroje svojho servera (least privilege), oba servery su len na citanie.

@@ -14,6 +14,7 @@ from langgraph.prebuilt import create_react_agent
 from langgraph.types import Send
 
 import prompts
+import mcp_trace as trace
 from common import MODEL, SOURCES, Plan, format_findings, log, mcp_servers, questions, valid_sources
 
 llm = ChatGoogleGenerativeAI(model=MODEL, max_retries=6)  # retries cover the free tier limit (429)
@@ -77,13 +78,17 @@ async def reporter(state: State):
 
 # --- graph -------------------------------------------------------------------------------------------------------------
 async def build_graph():
-    client = MultiServerMCPClient({src: {**cfg, "transport": "streamable_http"} for src, cfg in mcp_servers().items()})
+    client = MultiServerMCPClient(
+        {src: {**cfg, "transport": "streamable_http"} for src, cfg in mcp_servers().items()},
+        tool_interceptors=[trace.langgraph_interceptor])
     g = StateGraph(State)
     g.add_node("router", router)
     g.add_node("analyst", analyst)
     g.add_node("reporter", reporter)
     for src in SOURCES:
-        g.add_node(f"{src}_scout", make_scout(src, await client.get_tools(server_name=src)))
+        tools = await client.get_tools(server_name=src)  # connects: initialize + tools/list
+        trace.banner(src, [t.name for t in tools])
+        g.add_node(f"{src}_scout", make_scout(src, tools))
         g.add_edge(f"{src}_scout", "analyst")
     g.add_edge(START, "router")
     g.add_conditional_edges("router", fan_out, [f"{src}_scout" for src in SOURCES])

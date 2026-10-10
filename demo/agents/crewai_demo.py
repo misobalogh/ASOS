@@ -6,6 +6,7 @@ import asyncio
 import os
 
 import prompts
+import mcp_trace as trace
 from common import (
     MODEL,
     Plan,
@@ -37,7 +38,8 @@ def run_scout(source: str, plan: Plan, query: str) -> str:
     params = {"url": cfg["url"], "transport": "streamable-http", "headers": cfg["headers"]}
     task = prompts.SCOUT_TASK.format(source=source, product=plan.product, budget=plan.budget_eur, query=query)
     with MCPServerAdapter(params) as tools:
-        return run_crew(f"{source} scout", prompts.SCOUT_RULES, task, tools=list(tools)).raw
+        trace.banner(source, [t.name for t in tools])  # connected: initialize + tools/list
+        return run_crew(f"{source} scout", prompts.SCOUT_RULES, task, tools=trace.wrap_crewai_tools(source, list(tools))).raw
 
 
 # --- flow --------------------------------------------------------------------------------------------------------------
