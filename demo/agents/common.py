@@ -9,6 +9,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
+from ui import ui
+
 os.environ.setdefault("CREWAI_TRACING_ENABLED", "false")
 os.environ.setdefault("OTEL_SDK_DISABLED", "true")
 warnings.filterwarnings("ignore")
@@ -45,7 +47,7 @@ def format_findings(findings: dict[str, str]) -> str:
 
 
 def log(who: str, text: str) -> None:
-    print(f"[{who}] {text}", flush=True)
+    ui.say(who, text)
 
 
 def questions():
@@ -53,10 +55,10 @@ def questions():
     if len(sys.argv) > 1:
         yield " ".join(sys.argv[1:])
         return
-    print(f'Type your question, Enter = example ("{EXAMPLE_QUERY}"), q = quit.')
+    ui.info(f'Type your question, Enter = example ("{EXAMPLE_QUERY}"), q = quit.')
     while True:
         try:
-            text = input("\nQuestion> ").strip()
+            text = ui.ask()
         except (EOFError, KeyboardInterrupt):
             return
         if text.lower() in ("q", "quit", "exit"):

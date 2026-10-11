@@ -21,6 +21,7 @@ dependencies = [
     { name = "langchain-mcp-adapters" },
     { name = "langgraph" },
     { name = "python-dotenv" },
+    { name = "rich" },
 ]
 
 [package.metadata]
@@ -31,6 +32,7 @@ requires-dist = [
     { name = "langchain-mcp-adapters", specifier = ">=0.3.2" },
     { name = "langgraph", specifier = ">=1.2.14" },
     { name = "python-dotenv", specifier = ">=1.2.4" },
+    { name = "rich", specifier = ">=14.3.4" },
 ]
 
 [[package]]

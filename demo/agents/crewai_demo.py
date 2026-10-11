@@ -7,6 +7,7 @@ import os
 
 import prompts
 import mcp_trace as trace
+from ui import ui
 from common import (
     MODEL,
     Plan,
@@ -38,7 +39,7 @@ def run_scout(source: str, plan: Plan, query: str) -> str:
     params = {"url": cfg["url"], "transport": "streamable-http", "headers": cfg["headers"]}
     task = prompts.SCOUT_TASK.format(source=source, product=plan.product, budget=plan.budget_eur, query=query)
     with MCPServerAdapter(params) as tools:
-        trace.banner(source, [t.name for t in tools])  # connected: initialize + tools/list
+        trace.register(source, [t.name for t in tools])  # connected: initialize + tools/list
         return run_crew(f"{source} scout", prompts.SCOUT_RULES, task, tools=trace.wrap_crewai_tools(source, list(tools))).raw
 
 
@@ -57,15 +58,16 @@ class PriceScoutFlow(Flow[State]):
         task = prompts.ROUTER_TASK.format(query=self.state.query)
         plan = run_crew("router", prompts.ROUTER_RULES, task, output=Plan).pydantic
         plan.sources = valid_sources(plan)
-        log("router", f"sources -> {plan.sources}, product={plan.product!r}, budget={plan.budget_eur} EUR")
+        log("router", f"sources {plan.sources} | product {plan.product!r} | budget {plan.budget_eur} EUR")
+        trace.begin_scouts(plan.sources)
         self.state.plan = plan
 
     async def _scout(self, source: str):
         if source in self.state.plan.sources:
-            log(f"{source}_scout", "mcp.call ...")
-            text = await asyncio.to_thread(run_scout, source, self.state.plan, self.state.query)
-            self.state.findings[source] = text
-            log(f"{source}_scout", "done")
+            try:
+                self.state.findings[source] = await asyncio.to_thread(run_scout, source, self.state.plan, self.state.query)
+            finally:
+                ui.scout_done(source)
 
     @listen(router)
     async def bazos_scout(self):
@@ -91,13 +93,14 @@ class PriceScoutFlow(Flow[State]):
 
 def main():
     for query in questions():
-        log("user", query)
+        ui.question(query)
         flow = PriceScoutFlow(suppress_flow_events=True)
         try:
             flow.kickoff(inputs={"query": query})
-            print("\n" + flow.state.report)
+            ui.report(flow.state.report)
         except Exception as exc:  # e.g. Gemini free tier limit (429): keep the loop alive
-            print(f"\nFAILED: {type(exc).__name__}: {str(exc)[:300]}")
+            ui.close()
+            ui.info(f"FAILED: {type(exc).__name__}: {str(exc)[:300]}")
 
 
 main()

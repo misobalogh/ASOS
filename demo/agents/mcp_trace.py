@@ -1,15 +1,14 @@
-"""Makes the MCP traffic visible: which server (address:port), which tool with which arguments, what came back.
+"""Makes the MCP traffic visible: which server, which tool with which arguments, what came back (shown by ui.py).
 
-Set MCP_RAW=1 to print the full response text instead of a short summary, MCP_SHOW_HOST=1 to show the real host.
+Set MCP_RAW=1 to show the full response text instead of a short summary.
 """
 import json
 import os
 import time
 from urllib.parse import urlparse
 
-from common import log, mcp_servers
-
-ARROW_OUT, ARROW_IN = "-->", "<--"
+from common import mcp_servers
+from ui import ui
 
 
 def _short(text: str, limit: int = 200) -> str:
@@ -17,46 +16,61 @@ def _short(text: str, limit: int = 200) -> str:
     return text if len(text) <= limit else text[:limit] + f"... (+{len(text) - limit} chars)"
 
 
-def _target(source: str) -> str:
-    """host:port of the server; the host is masked (the demo runs on a projector), MCP_SHOW_HOST=1 shows it."""
-    url = urlparse(mcp_servers()[source]["url"])
-    return url.netloc if os.environ.get("MCP_SHOW_HOST") else f"x.x.x.x:{url.port}"
-
-
-def describe(text: str, rows: int = 3) -> str:
-    """One-line summary of a tool response: item count and the first few items (title/name, price, stock)."""
+def describe(text: str, limit: int = 3) -> tuple[str, list[str]]:
+    """Short summary of a tool response: a headline and up to `limit` rows (title, price, stock/place)."""
     if os.environ.get("MCP_RAW"):
-        return text
+        return text, []
     try:
         data = json.loads(text)
     except ValueError:
-        return _short(text)
+        return _describe_text(text, limit)
     lists = [(k, v) for k, v in data.items() if isinstance(v, list) and v and isinstance(v[0], dict)] \
         if isinstance(data, dict) else []
     if not lists:
-        return f"{len(text)} chars: " + _short(text)
+        return _short(text, 100), []
     key, items = lists[0]
     total = data.get("total_count")
-    head = f"{len(items)} {key}" + (f" (total {total})" if total and total != len(items) else "")
-    lines = []
-    for item in items[:rows]:
-        parts = [str(item[f]) for f in ("title", "name", "price", "availability", "locality") if item.get(f) is not None]
-        lines.append(" | ".join(parts))
-    return head + ": " + " ;; ".join(lines) + (" ;; ..." if len(items) > rows else "")
+    headline = f"{len(items)} {key}" + (f" (of {total})" if total and total != len(items) else "")
+    rows = []
+    for item in items[:limit]:
+        price = f"{item['price']} EUR" if item.get("price") is not None else "-"
+        rows.append(f"{price:>8}  {item.get('title') or item.get('name')}  ({item.get('locality', '')})")
+    return headline, rows
 
 
-def banner(source: str, tool_names: list[str]) -> None:
-    """Printed once per server: where it lives and what it offers (the result of initialize + tools/list)."""
-    log("mcp", f"{source:5} http://{_target(source)}/mcp  {len(tool_names)} tools: {', '.join(tool_names)}")
+def _describe_text(text: str, limit: int) -> tuple[str, list[str]]:
+    """Alza answers with markdown lines like '- **Title** . code: `x` . 519 EUR . in stock . ...'."""
+    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+    headline = lines[0].replace("**", "") if lines else "empty"
+    rows = []
+    for ln in lines:
+        if ln.startswith("- **"):
+            parts = [p.strip().replace("**", "") for p in ln[2:].split(" \u00b7 ")]
+            price = next((p for p in parts if "EUR" in p), "-")
+            stock = next((p for p in parts if "stock" in p or "sklad" in p.lower()), "")
+            rows.append(f"{price:>10}  {parts[0]}  {stock}")
+    return _short(headline, 80), rows[:limit]
+
+
+def register(src: str, tool_names: list[str]) -> None:
+    """Called once a server is connected (initialize + tools/list): remember its tools for the UI."""
+    ui.tools[src] = tool_names
+
+
+def begin_scouts(sources: list[str]) -> None:
+    ui.begin_scouts({src: str(urlparse(mcp_servers()[src]["url"]).port) for src in sources})
+
+
+def show_servers() -> None:
+    ui.servers({src: str(urlparse(cfg["url"]).port) for src, cfg in mcp_servers().items()})
 
 
 def log_call(source: str, tool: str, args: dict) -> None:
-    log(f"{source}_scout", f"{ARROW_OUT} http://{_target(source)}/mcp  tools/call {tool} "
-        + _short(json.dumps({k: v for k, v in args.items() if v is not None}, ensure_ascii=False), 160))
+    ui.call(source, tool, args)
 
 
 def log_result(source: str, text: str, seconds: float) -> None:
-    log(f"{source}_scout", f"{ARROW_IN} {seconds:.1f} s  {describe(text)}")
+    ui.result(source, *describe(text), seconds)
 
 
 def text_of(result) -> str:

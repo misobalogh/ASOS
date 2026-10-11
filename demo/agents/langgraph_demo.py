@@ -15,6 +15,7 @@ from langgraph.types import Send
 
 import prompts
 import mcp_trace as trace
+from ui import ui
 from common import MODEL, SOURCES, Plan, format_findings, log, mcp_servers, questions, valid_sources
 
 llm = ChatGoogleGenerativeAI(model=MODEL, max_retries=6)  # retries cover the free tier limit (429)
@@ -40,7 +41,8 @@ async def router(state: State):
     plan = await llm.with_structured_output(Plan).ainvoke(
         [SystemMessage(prompts.ROUTER_RULES), HumanMessage(prompts.ROUTER_TASK.format(query=state["query"]))])
     plan.sources = valid_sources(plan)
-    log("router", f"sources -> {plan.sources}, product={plan.product!r}, budget={plan.budget_eur} EUR")
+    log("router", f"sources {plan.sources} | product {plan.product!r} | budget {plan.budget_eur} EUR")
+    trace.begin_scouts(plan.sources)
     return {"plan": plan}
 
 
@@ -54,11 +56,12 @@ def make_scout(source: str, tools: list):
     agent = create_react_agent(llm, tools, prompt=prompts.SCOUT_RULES)
 
     async def scout(state: State):
-        log(f"{source}_scout", "mcp.call ...")
         task = prompts.SCOUT_TASK.format(
             source=source, product=state["plan"].product, budget=state["plan"].budget_eur, query=state["query"])
-        res = await agent.ainvoke({"messages": [HumanMessage(task)]})
-        log(f"{source}_scout", f"done, {len(res['messages'])} messages")
+        try:
+            res = await agent.ainvoke({"messages": [HumanMessage(task)]})
+        finally:
+            ui.scout_done(source)
         return {"findings": {source: res["messages"][-1].text}}
 
     return scout
@@ -87,25 +90,27 @@ async def build_graph():
     g.add_node("reporter", reporter)
     for src in SOURCES:
         tools = await client.get_tools(server_name=src)  # connects: initialize + tools/list
-        trace.banner(src, [t.name for t in tools])
+        trace.register(src, [t.name for t in tools])
         g.add_node(f"{src}_scout", make_scout(src, tools))
         g.add_edge(f"{src}_scout", "analyst")
     g.add_edge(START, "router")
     g.add_conditional_edges("router", fan_out, [f"{src}_scout" for src in SOURCES])
     g.add_edge("analyst", "reporter")
     g.add_edge("reporter", END)
+    trace.show_servers()
     return g.compile()
 
 
 async def main():
     app = await build_graph()
     for query in questions():
-        log("user", query)
+        ui.question(query)
         try:
             out = await app.ainvoke({"query": query, "findings": {}})
-            print("\n" + out["report"])
+            ui.report(out["report"])
         except Exception as exc:  # e.g. Gemini quota: keep the loop alive
-            print(f"\nFAILED: {type(exc).__name__}: {str(exc)[:300]}")
+            ui.close()
+            ui.info(f"FAILED: {type(exc).__name__}: {str(exc)[:300]}")
 
 
 asyncio.run(main())
