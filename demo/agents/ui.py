@@ -5,8 +5,14 @@ scout_done, report), so LangGraph and CrewAI look exactly the same. All methods 
 in threads).
 """
 import threading
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 
+from html import escape as html_escape
+
+from prompt_toolkit import PromptSession
+from prompt_toolkit.formatted_text import HTML
+from prompt_toolkit.history import InMemoryHistory
 from rich.console import Console, Group
 from rich.live import Live
 from rich.markdown import Markdown
@@ -36,6 +42,7 @@ class UI:
         self.tools: dict[str, list[str]] = {}  # source -> tool names (known after connecting)
         self.cols: dict[str, Column] = {}
         self.live: Live | None = None
+        self.session: PromptSession | None = None
 
     # --- plain lines ---------------------------------------------------------------------------------------------
     def badge(self, who: str) -> Text:
@@ -46,8 +53,23 @@ class UI:
         with self.lock:
             self.console.print(self.badge(who), Text(text))
 
-    def ask(self) -> str:
-        return self.console.input("\n[bold]Question>[/] ").strip()
+    def welcome(self, example: str) -> None:
+        self.console.print(Panel(
+            Text.assemble("Product and budget, new or used, in your own words.\n",
+                          ("Enter", "bold"), " = example   ", ("Up/Down", "bold"), " = history   ", ("q", "bold"),
+                          " = quit"),
+            title="[bold]Ask the price scout[/]", title_align="left", border_style="grey50", padding=(0, 1)))
+
+    def ask(self, example: str) -> str:
+        """Input line with the example as a grey placeholder (Enter accepts it) and history on the arrow keys."""
+        if self.session is None:
+            self.session = PromptSession(history=InMemoryHistory())
+        ask = lambda: self.session.prompt(  # noqa: E731
+            HTML("\n<b><ansicyan>&gt;</ansicyan></b> "),
+            placeholder=HTML(f"<ansibrightblack>{html_escape(example)}</ansibrightblack>"))
+        # prompt_toolkit runs its own event loop; a worker thread keeps it out of LangGraph's running loop
+        with ThreadPoolExecutor(1) as pool:
+            return pool.submit(ask).result().strip()
 
     def question(self, text: str) -> None:
         self.console.print(Rule(Text(text, style="bold"), style="grey50"))

@@ -55,10 +55,10 @@ def questions():
     if len(sys.argv) > 1:
         yield " ".join(sys.argv[1:])
         return
-    ui.info(f'Type your question, Enter = example ("{EXAMPLE_QUERY}"), q = quit.')
+    ui.welcome(EXAMPLE_QUERY)
     while True:
         try:
-            text = ui.ask()
+            text = ui.ask(EXAMPLE_QUERY)
         except (EOFError, KeyboardInterrupt):
             return
         if text.lower() in ("q", "quit", "exit"):
